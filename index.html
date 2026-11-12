@@ -1,0 +1,297 @@
+<title>Квест 23:59</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Manrope:wght@400;600;700&display=swap">
+<style>
+/* Layout: an evening shelf of hourly gift boxes 18:00–22:00, each hides 3 questions; surprise at 22:50 */
+:root{
+  --night:#141432; --night-2:#1f1f4a; --night-3:#2b2b63; --ink:#f3ecff; --muted:#a9a3cf;
+  --flame:#ffb347; --rose:#ff6f91; --ok:#7fe0b0; --line:rgba(255,255,255,.12);
+  --display:"Unbounded", "Arial Black", system-ui, sans-serif;
+  --body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{
+  background:radial-gradient(120% 80% at 50% 0%, var(--night-2), var(--night) 60%) fixed, var(--night);
+  color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:24px 48px;
+}
+#stars,#confetti{position:fixed;inset:0;pointer-events:none}
+#stars{z-index:0} #confetti{z-index:5}
+main{position:relative;z-index:1;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.04em}
+.brand b{color:var(--flame)}
+.clock{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700;font-size:14px}
+.screen{display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--flame);font-weight:700}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.15}
+h1{font-size:clamp(28px,8vw,44px);font-weight:800}
+h2{font-size:clamp(20px,5.5vw,28px);font-weight:800}
+p{margin:0;color:var(--muted);max-width:60ch}
+p strong{color:var(--ink)}
+.testbar{font-size:13px;color:var(--night);background:var(--flame);border-radius:10px;padding:8px 12px;font-weight:700}
+
+/* shelf */
+.shelf{display:flex;flex-direction:column;gap:10px;list-style:none;margin:0;padding:0}
+.box{width:100%;display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:14px;
+  padding:12px 16px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.2);
+  color:var(--ink);font:inherit;text-align:left;cursor:default}
+.gift{width:100%;aspect-ratio:1;position:relative}
+.gift .lid{position:absolute;left:-6%;right:-6%;top:0;height:26%;border-radius:5px;background:var(--c1);transition:transform .5s}
+.gift .body{position:absolute;left:0;right:0;top:24%;bottom:0;border-radius:5px;background:var(--c2)}
+.gift .rib{position:absolute;left:44%;width:12%;top:0;bottom:0;background:var(--c3)}
+.gift .bow{position:absolute;left:50%;top:-16%;width:46%;height:22%;transform:translateX(-50%);
+  border:4px solid var(--c3);border-radius:50% 50% 40% 40%;border-bottom:0}
+.box .info{display:flex;flex-direction:column;min-width:0}
+.box .t{font-family:var(--display);font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.box .n{font-weight:700}
+.pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);color:var(--muted)}
+.box.locked{--c1:#34345e;--c2:#2a2a52;--c3:#45457a}
+.box.locked .n{color:var(--muted)}
+.box.ready{--c1:var(--flame);--c2:#e8923a;--c3:var(--rose);border-color:var(--flame);background:var(--night-3);cursor:pointer}
+.box.ready .gift{animation:wiggle 2.4s ease-in-out infinite}
+.box.ready .t{color:var(--flame)}
+.box.ready .pill{background:var(--flame);color:var(--night);border-color:var(--flame)}
+.box.opened{--c1:#3a5a4c;--c2:#2f4a3f;--c3:var(--ok);cursor:pointer}
+.box.opened .t{color:var(--ok)} .box.opened .pill{color:var(--ok);border-color:var(--ok)}
+.box.opened .lid{transform:translateY(-30%) rotate(-12deg)}
+.box.final{border-style:dashed;border-color:var(--rose)}
+.box.final.ready{--c1:var(--rose);--c2:#d9557a;--c3:var(--flame);border-style:solid;background:rgba(255,111,145,.14)}
+.box.final.ready .t{color:var(--rose)}
+.box.final.ready .pill{background:var(--rose);border-color:var(--rose)}
+@keyframes wiggle{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-7deg)}90%{transform:rotate(7deg)}95%{transform:rotate(-4deg)}}
+.box:focus-visible,button:focus-visible{outline:3px solid var(--rose);outline-offset:3px}
+
+/* opening + quiz */
+button.ghost{font:700 15px var(--body);background:transparent;color:var(--ink);border:1px solid var(--line);
+  border-radius:999px;padding:10px 18px;cursor:pointer;align-self:flex-start}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 0}
+.biggift{--c1:var(--flame);--c2:#e8923a;--c3:var(--rose);width:min(180px,50vw);aspect-ratio:1;cursor:pointer;border:0;background:none;padding:0}
+.biggift .bow{border-width:8px}
+.biggift.shake{animation:shake .35s}
+.biggift.pop .lid{transform:translateY(-140%) rotate(-25deg)}
+@keyframes shake{25%{transform:rotate(-8deg) scale(1.04)}75%{transform:rotate(8deg) scale(1.04)}}
+.taps{display:flex;gap:8px}
+.taps i{width:12px;height:12px;border-radius:50%;background:var(--line)}
+.taps i.on{background:var(--flame)}
+.hint{font-weight:700;color:var(--muted);text-align:center}
+.quiz{display:flex;flex-direction:column;gap:14px;width:100%}
+.qcount{display:flex;gap:6px}
+.qcount i{width:32px;height:6px;border-radius:3px;background:var(--line)}
+.qcount i.on{background:var(--flame)} .qcount i.done{background:var(--ok)}
+.question{font-family:var(--display);font-weight:500;font-size:clamp(18px,5vw,23px);line-height:1.3;text-wrap:balance}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.opts{grid-template-columns:1fr}}
+.opt{font:600 16px var(--body);color:var(--ink);background:var(--night-2);border:1px solid var(--line);
+  border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer}
+.opt:hover{border-color:var(--flame)}
+.opt.right{background:rgba(127,224,176,.16);border-color:var(--ok)}
+.opt.wrong{background:rgba(255,111,145,.12);border-color:var(--rose);animation:nudge .35s}
+@keyframes nudge{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.msg{min-height:1.5em;font-weight:700;color:var(--rose)}
+.msg.good{color:var(--ok)}
+.note{border-radius:18px;padding:24px;background:var(--ink);color:#2a2346;font-size:18px;line-height:1.5;font-weight:600;
+  box-shadow:0 16px 40px rgba(0,0,0,.35);transform:rotate(-1deg);max-width:440px;width:100%}
+.note .from{display:block;margin-top:12px;font-size:14px;color:#7a6fa8;font-weight:700}
+
+.prize{border:1px solid var(--rose);border-radius:20px;padding:24px;background:rgba(255,111,145,.08);display:flex;flex-direction:column;gap:14px}
+.countdown{font-family:var(--display);font-size:clamp(30px,10vw,46px);font-weight:800;font-variant-numeric:tabular-nums}
+.ticket{border-top:1px dashed var(--line);padding-top:12px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:0}
+.ticket dt{color:var(--muted)} .ticket dd{margin:0;font-weight:700}
+.status{display:flex;align-items:center;gap:10px;font-weight:700}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--ok);animation:ping 1.6s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(127,224,176,.6)}70%,100%{box-shadow:0 0 0 10px rgba(127,224,176,0)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<canvas id="stars"></canvas>
+<canvas id="confetti"></canvas>
+
+<main>
+  <div class="top">
+    <div class="brand">ВЕЧІР <b>СЮРПРИЗІВ</b></div>
+    <div class="clock" id="clock"></div>
+  </div>
+  <div class="testbar" id="testbar" hidden>Тестовий режим: усе відкрито, нічого не зберігається.</div>
+
+  <section class="screen" id="day">
+    <div class="eyebrow" id="dayEyebrow">Завтра твій день</div>
+    <h1>Вечір сюрпризів</h1>
+    <p>З <strong>20:00</strong> тут з'являються коробочки, по одній кожні 40 хвилин. Відкрий її, дай відповідь на 3 питання і забери записку всередині. О <strong>22:50</strong> на тебе чекає головне.</p>
+    <ul class="shelf" id="shelf"></ul>
+  </section>
+
+  <section class="screen" id="open" hidden>
+    <button class="ghost" id="back">← До коробочок</button>
+    <div class="eyebrow" id="oEyebrow"></div>
+    <h2 id="oTitle"></h2>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <section class="screen" id="final" hidden>
+    <button class="ghost" id="back2">← До коробочок</button>
+    <div class="eyebrow">22:50</div>
+    <h1>Ти молодець!</h1>
+    <div class="prize">
+      <p><strong>До тебе відправляється перший подарунок.</strong></p>
+      <div class="status"><span class="dot"></span>Подарунок у дорозі</div>
+      <div>
+        <div class="eyebrow">Прибуде через</div>
+        <div class="countdown" id="cd">--:--:--</div>
+      </div>
+      <dl class="ticket">
+        <dt>Отримувач</dt><dd>Найкращий іменинник</dd>
+        <dt>Час прибуття</dt><dd>00:00</dd>
+        <dt>Вміст</dt><dd>Секрет</dd>
+        <dt>Обмін і повернення</dt><dd>Неможливі</dd>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ============ НАЛАШТУВАННЯ ============ */
+const GAME_DATE = {y:2026, m:11, d:12};   // день гри
+const FINAL = {h:22, m:50};
+const SIGN = "— твоя Карамелька";
+// a: номер правильної відповіді (0–3) або "all" — підходить будь-яка
+const BOXES = [
+ {h:20, m:0, title:"OneRepublic", q:[
+   {t:"Хто вокаліст і фронтмен OneRepublic?",o:["Адам Левін","Раян Теддер","Кріс Мартін","Ден Рейнольдс"],a:1},
+   {t:"На якому альбомі OneRepublic вийшла пісня «Love Runs Out»?",o:["Dreaming Out Loud","Waking Up","Native","Human"],a:2},
+   {t:"Яку пісню OneRepublic записали для фільму «Топ Ган: Меверік»?",o:["Counting Stars","Secrets","I Ain't Worried","Good Life"],a:2}],
+  note:"Тримай перший поцілуночок, котусік"},
+ {h:20, m:40, title:"Аватар: Останній захисник", q:[
+   {t:"Як звати останнього мага повітря?",o:["Зуко","Сокка","Аанг","Айро"],a:2},
+   {t:"Скільки років Аанг провів в айсбергу?",o:["10","50","100","1000"],a:2},
+   {t:"Як звати летючого бізона Аанга?",o:["Момо","Аппа","Тоф","Ую"],a:1}],
+  note:"Ти мій Аватар: всі стихії — всі є"},
+ {h:21, m:20, title:"Гра на пониження", q:[
+   {t:"Хто зіграв Майкла Беррі?",o:["Бред Пітт","Раян Гослінг","Стів Карелл","Крістіан Бейл"],a:3},
+   {t:"Хто пояснює іпотечні облігації, лежачи у ванні?",o:["Марго Роббі","Селена Гомес","Скарлетт Йоганссон","Емма Стоун"],a:0},
+   {t:"На що зробили ставку герої фільму?",o:["На ріст біткоїна","На обвал іпотечного ринку США","На золото","На нафту"],a:1}],
+  note:"Обожнюю дивитись фільми в обіймах з тобоююю"},
+ {h:22, m:0, title:"Останнє питання вечора", q:[
+   {t:"Хто сьогодні найкращий у світі?",o:["Ти","Ти","Ти","Звісно, ти"],a:"all"},
+   {t:"Готовий до головного сюрпризу?",o:["Так","Звісно","Давно","Ще й як"],a:"all"}],
+  note:"Скоро, о 00:00, зустрічай мене, будь ласка"}
+];
+/* ====================================== */
+
+const $=id=>document.getElementById(id);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TEST=location.hash==='#test';
+const KEY='vechir-'+GAME_DATE.y+GAME_DATE.m+GAME_DATE.d;
+let opened={};
+if(!TEST){try{opened=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){opened={}}}
+function save(){if(TEST)return;try{localStorage.setItem(KEY,JSON.stringify(opened))}catch(e){}}
+if(TEST)$('testbar').hidden=false;
+
+const pad=n=>String(n).padStart(2,'0');
+const months=['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+function at(h,m){return new Date(GAME_DATE.y,GAME_DATE.m-1,GAME_DATE.d,h,m||0,0,0)}
+const tm=b=>pad(b.h)+':'+pad(b.m||0);
+function isOpen(h,m){return TEST||new Date()>=at(h,m)}
+const giftHTML='<div class="gift"><div class="body"></div><div class="rib"></div><div class="lid"></div><div class="bow"></div></div>';
+function show(id){['day','open','final'].forEach(s=>$(s).hidden=s!==id);scrollTo({top:0,behavior:reduce?'auto':'smooth'})}
+
+function render(){
+  const sh=$('shelf');sh.innerHTML='';
+  BOXES.forEach((b,i)=>{
+    const st=opened[i]?'opened':isOpen(b.h,b.m)?'ready':'locked';
+    sh.appendChild(item('box '+st,tm(b),st==='locked'?'Сюрприз '+(i+1):b.title,
+      st==='opened'?'Відкрито':st==='ready'?'Відкрий':'Ще рано',st==='locked'?null:()=>openBox(i)));
+  });
+  const fo=isOpen(FINAL.h,FINAL.m);
+  sh.appendChild(item('box final '+(fo?'ready':'locked'),`${pad(FINAL.h)}:${pad(FINAL.m)}`,fo?'Головний сюрприз':'???',fo?'Відкрий':'Ще рано',fo?showFinal:null));
+  const now=new Date();
+  $('dayEyebrow').textContent=TEST?'Перевірка':
+    now<at(0)?'Старт '+GAME_DATE.d+' '+months[GAME_DATE.m-1]+' о 20:00':
+    now<at(24)?'Сьогодні напередодні твого дня':'Вечір сюрпризів';
+}
+function item(cls,time,name,pill,fn){
+  const li=document.createElement('li');const b=document.createElement('button');b.type='button';b.className=cls;
+  b.innerHTML=giftHTML+`<span class="info"><span class="t">${time}</span><span class="n"></span></span><span class="pill">${pill}</span>`;
+  b.querySelector('.n').textContent=name;
+  if(fn)b.onclick=fn;else b.disabled=true;
+  li.appendChild(b);return li;
+}
+
+let cur,qi,busy=false;
+function openBox(i){
+  cur=i;const b=BOXES[i];
+  $('oEyebrow').textContent=tm(b)+' · Коробочка '+(i+1)+' з '+BOXES.length;
+  $('oTitle').textContent=b.title;show('open');
+  if(opened[i]){showNote();return}
+  $('stage').innerHTML=`<button class="biggift" id="bg" type="button" aria-label="Подарунок">${giftHTML}</button>
+    <div class="taps" id="taps"><i></i><i></i><i></i></div><div class="hint">Натисни 3 рази, щоб відкрити</div>`;
+  let taps=0;const bg=$('bg');
+  bg.onclick=()=>{taps++;[...$('taps').children].forEach((d,k)=>d.className=k<taps?'on':'');
+    bg.classList.remove('shake');void bg.offsetWidth;bg.classList.add('shake');
+    if(taps>=3){bg.onclick=null;bg.classList.add('pop');burst(60);setTimeout(()=>{qi=0;askQ()},600);}};
+}
+function askQ(){
+  const q=BOXES[cur].q[qi];
+  $('stage').innerHTML=`<div class="quiz"><div class="qcount" id="qc">${'<i></i>'.repeat(BOXES[cur].q.length)}</div>
+    <div class="question" id="qt"></div><div class="opts" id="opts"></div><div class="msg" id="qm"></div></div>`;
+  [...$('qc').children].forEach((el,k)=>el.className=k<qi?'done':k===qi?'on':'');
+  $('qt').textContent=q.t;
+  q.o.forEach((txt,k)=>{const b=document.createElement('button');b.type='button';b.className='opt';b.textContent=txt;
+    b.onclick=()=>answer(b,k);$('opts').appendChild(b);});
+}
+const wrongs=['Не зовсім, спробуй ще!','Майже! Ще одна спроба.','Подумай ще трохи, ти зможеш.'];
+const rights=['Так!','Правильно!','Розумник!','Саме так!'];
+function answer(b,k){
+  if(busy)return;const q=BOXES[cur].q[qi];
+  if(q.a==='all'||q.a===k){busy=true;b.classList.add('right');
+    $('qm').className='msg good';$('qm').textContent=q.a==='all'?'Тут усі відповіді правильні!':rights[Math.floor(Math.random()*rights.length)];
+    setTimeout(()=>{busy=false;qi++;if(qi<BOXES[cur].q.length)askQ();else{opened[cur]=1;save();burst(90);showNote();}},850);
+  }else{b.classList.remove('wrong');void b.offsetWidth;b.classList.add('wrong');
+    $('qm').className='msg';$('qm').textContent=wrongs[Math.floor(Math.random()*wrongs.length)];}
+}
+function showNote(){
+  const next=BOXES[cur+1];
+  const after=next?(isOpen(next.h,next.m)?'Наступна коробочка вже чекає.':'Наступна відкриється о '+tm(next)+'.'):'Далі — головне, о '+pad(FINAL.h)+':'+pad(FINAL.m)+'.';
+  $('stage').innerHTML='';
+  const note=document.createElement('div');note.className='note';note.textContent=BOXES[cur].note;
+  const s=document.createElement('span');s.className='from';s.textContent=SIGN;note.appendChild(s);
+  const h=document.createElement('div');h.className='hint';h.textContent=after;
+  $('stage').append(note,h);
+}
+$('back').onclick=$('back2').onclick=()=>{render();show('day')};
+
+let cdT;
+function showFinal(){show('final');burst(180);clearInterval(cdT);
+  const tick=()=>{const now=new Date(),t=at(24,0);if(now.getTime()>=t.getTime()){$('cd').textContent='Вже тут';clearInterval(cdT);return}
+    const s=Math.floor((t-now)/1000);
+    if(s<=0){$('cd').textContent='Вже тут';clearInterval(cdT);return}
+    $('cd').textContent=pad(Math.floor(s/3600))+':'+pad(Math.floor(s%3600/60))+':'+pad(s%60);};
+  tick();cdT=setInterval(tick,1000);}
+
+let lastMin=-1;
+function tickClock(){const d=new Date();$('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes());
+  if(d.getMinutes()!==lastMin){lastMin=d.getMinutes();if(!$('day').hidden)render();}}
+setInterval(tickClock,1000);tickClock();
+
+(function(){const c=$('stars'),x=c.getContext('2d');let s=[];
+  function size(){const r=devicePixelRatio||1;c.width=innerWidth*r;c.height=innerHeight*r;c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';
+    s=Array.from({length:90},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.4*r+.3,p:Math.random()*6}));}
+  size();addEventListener('resize',size);
+  (function d(t){x.clearRect(0,0,c.width,c.height);for(const a of s){x.globalAlpha=.35+.35*Math.sin(t/900+a.p);x.fillStyle='#fff';x.beginPath();x.arc(a.x,a.y,a.r,0,7);x.fill();}
+    if(!reduce)requestAnimationFrame(d);})(0);})();
+
+const cf=$('confetti'),fx=cf.getContext('2d');let parts=[],cfOn=false;
+function burst(n){if(reduce)return;cf.width=innerWidth;cf.height=innerHeight;
+  const cols=['#ffb347','#ff6f91','#f3ecff','#b8a6ff'];
+  for(let i=0;i<n;i++)parts.push({x:innerWidth/2,y:innerHeight/3,vx:(Math.random()-.5)*12,vy:Math.random()*-10-3,c:cols[i%4],r:Math.random()*6+3,life:120});
+  if(!cfOn){cfOn=true;requestAnimationFrame(cfLoop);}}
+function cfLoop(){fx.clearRect(0,0,cf.width,cf.height);
+  for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.vy+=.3;p.life--;fx.fillStyle=p.c;fx.globalAlpha=Math.max(0,p.life/120);fx.fillRect(p.x,p.y,p.r,p.r*.6);}
+  parts=parts.filter(p=>p.life>0);if(parts.length)requestAnimationFrame(cfLoop);else{cfOn=false;fx.clearRect(0,0,cf.width,cf.height);}}
+
+render();
+</script>
